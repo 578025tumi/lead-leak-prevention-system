@@ -1,10 +1,56 @@
 # Python
 __pycache__/
-*.pyc
-.python-version
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.egg
+
+# Virtual environments
 .venv/
 env/
+venv/
+ENV/
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+*.out
 
 # Environment variables
 .env
+.env.*
 
+# Alembic migrations cache
+migrations/versions/__pycache__/
+
+# Database files
+*.db
+*.sqlite3
+pgdata/
+
+# Docker
+*.pid
+*.seed
+*.bak
+*.tmp
+*.temp
+*.lock
+
+# Node (if frontend assets exist)
+node_modules/
+dist/
+build/
+
+# Coverage/testing
+.coverage
+htmlcov/
+.pytest_cache/
+.cache/
