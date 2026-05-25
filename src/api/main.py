@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, HTTPException, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse,RedirectResponse
 from pydantic import ValidationError
 import logging
 import asyncio
@@ -27,12 +27,96 @@ from fastapi import FastAPI
 from src.api.leads import router as leads_router
 from src.api.clients import router as clients_router
 from src.api.events import router as events_router
-
+from dotenv import load_dotenv
+import os
 app = FastAPI()
 
 app.include_router(leads_router)
 app.include_router(clients_router)
 app.include_router(events_router)
+
+CLIENT_ID = os.getenv("HUBSPOT_CLIENT_ID")
+CLIENT_SECRET = os.getenv("HUBSPOT_CLIENT_SECRET")
+REDIRECT_URI = os.getenv("HUBSPOT_REDIRECT_URI")
+AUTH_URL = f"https://app.hubspot.com/oauth/authorize?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope=crm.objects.contacts.read crm.objects.contacts.write"
+
+@app.get("/authorize_hubspot")
+def authorize():
+    return RedirectResponse(AUTH_URL)
+
+@app.get("/oauth2callback_hubspot")
+async def oauth_callback(request: Request):
+    code = request.query_params.get("code")
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing code")
+    async with httpx.AsyncClient() as client:
+        token_resp = await client.post(
+            "https://api.hubapi.com/oauth/v1/token",
+            data={
+                "grant_type": "authorization_code",
+                "client_id": CLIENT_ID,
+                "client_secret": CLIENT_SECRET,
+                "redirect_uri": REDIRECT_URI,
+                "code": code,
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+    tokens = token_resp.json()
+    return tokens
+
+@app.get("/hubspot/contacts")
+async def get_contacts(access_token: str):
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            "https://api.hubapi.com/crm/v3/objects/contacts",
+            headers={"Authorization": f"Bearer {access_token}"}
+        )
+    return resp.json()
+
+@app.get("/authorize_hubspot")
+def authorize():
+    auth_url = (
+        "https://app.hubspot.com/oauth/authorize"
+        f"?client_id={CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URI}"
+        f"&scope=crm.objects.contacts.read crm.objects.contacts.write"
+    )
+    return RedirectResponse(auth_url)
+@app.get("/oauth2callback_hubspot")
+async def oauth_callback(request: Request):
+    code = request.query_params.get("code")
+    if not code:
+        raise HTTPException(status_code=400, detail="Missing code")
+
+    async with httpx.AsyncClient() as client:
+        token_resp = await client.post(
+            "https://api.hubapi.com/oauth/v1/token",
+            data={
+                "grant_type": "authorization_code",
+                "client_id": CLIENT_ID,
+                "client_secret": CLIENT_SECRET,
+                "redirect_uri": REDIRECT_URI,
+                "code": code,
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+
+    tokens = token_resp.json()
+    # tokens = { "access_token": "...", "refresh_token": "...", "expires_in": 3600 }
+    return tokens
+async def refresh_token(refresh_token: str):
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            "https://api.hubapi.com/oauth/v1/token",
+            data={
+                "grant_type": "refresh_token",
+                "client_id": CLIENT_ID,
+                "client_secret": CLIENT_SECRET,
+                "refresh_token": refresh_token,
+            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+    return resp.json()
 
 
 # Global service instances

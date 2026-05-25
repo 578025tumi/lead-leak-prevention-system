@@ -1,5 +1,18 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+HUBSPOT_CLIENT_ID = os.getenv("HUBSPOT_CLIENT_ID")
+HUBSPOT_CLIENT_SECRET = os.getenv("HUBSPOT_CLIENT_SECRET")
+HUBSPOT_REDIRECT_URI = os.getenv("HUBSPOT_REDIRECT_URI")
+
+YOUR_ACCOUNT_SID = os.getenv("YOUR_ACCOUNT_SID")
+YOUR_AUTH_TOKEN = os.getenv("YOUR_AUTH_TOKEN")
+YOUR_TWILIO_NUMBER = os.getenv("YOUR_TWILIO_NUMBER")
+
+
 
 class Settings(BaseSettings):
     # General Settings
