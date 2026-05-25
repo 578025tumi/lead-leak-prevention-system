@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+email-validator
+httpx
+twilio            # Add this line
+sendgrid          # Add this line
+pytest             # Add this line
+pytest-asyncio 
+pydantic-settings
+sqlalchemy
+psycopg2-binary   # for PostgreSQL
+alembic           # for migrations
